@@ -7,3 +7,10 @@ CREATE TABLE servers (
     current_load INT DEFAULT 0,
     max_capacity INT DEFAULT 100
 );
+
+INSERT INTO servers (name, current_load, max_capacity) VALUES
+('Server-A', 20, 100),
+('Server-B', 40, 100),
+('Server-C', 50, 100),
+('Server-D', 30, 100),
+('Server-E', 10, 100);
