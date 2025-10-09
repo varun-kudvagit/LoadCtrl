@@ -23,6 +23,5 @@ This project simulates a dynamic load balancer built with Java (Core + JDBC) and
 1. Loads all available servers from the MySQL database into a linked list.
 2. Finds the middle server using the slow–fast pointer technique.
 3. Distributes incoming load requests evenly among the middle and its adjacent servers.
-Updates each server’s current load in the database.
-
-Allows adding or removing servers interactively from the console.
+4. Updates each server’s current load in the database.
+5. Allows adding or removing servers interactively from the console.
