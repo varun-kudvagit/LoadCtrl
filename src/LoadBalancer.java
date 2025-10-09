@@ -1,13 +1,18 @@
 import java.sql.*;
 import java.util.*;
+
 public class LoadBalancer {
     private Server head;
+
     // Loading servers from database into linked list
     public void loadServersFromDB() {
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT * FROM servers")) {
+
+            head = null; // reset the list before loading again
             Server prev = null;
+
             while (rs.next()) {
                 Server newServer = new Server(
                         rs.getInt("id"),
@@ -22,11 +27,14 @@ public class LoadBalancer {
                 }
                 prev = newServer;
             }
-            System.out.println("Servers loaded successfully from database");
+
+            System.out.println(" Servers loaded successfully from database.");
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
     // Finding middle server using slow/fast pointer
     public Server findMiddleServer() {
         if (head == null) return null;
@@ -38,6 +46,7 @@ public class LoadBalancer {
         }
         return slow;
     }
+
     // Distributing load to middle and its adjacent servers
     public void distributeLoad(int incomingLoad) {
         Server middle = findMiddleServer();
@@ -45,13 +54,17 @@ public class LoadBalancer {
             System.out.println(" No servers available.");
             return;
         }
+
         System.out.println("Middle server selected: " + middle.name);
         Server left = findPreviousServer(middle);
         Server right = middle.next;
+
         int distributeCount = 1;
         if (left != null) distributeCount++;
         if (right != null) distributeCount++;
+
         int loadPerServer = incomingLoad / distributeCount;
+
         try (Connection conn = DatabaseConnection.getConnection()) {
             updateServerLoad(conn, middle, loadPerServer);
             if (left != null) updateServerLoad(conn, left, loadPerServer);
@@ -59,8 +72,10 @@ public class LoadBalancer {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         System.out.println("Load distributed evenly among " + distributeCount + " servers.");
     }
+
     // Updating load in DB
     private void updateServerLoad(Connection conn, Server server, int addLoad) throws SQLException {
         server.currentLoad += addLoad;
@@ -86,10 +101,36 @@ public class LoadBalancer {
     // Displaying all servers
     public void displayServers() {
         Server current = head;
-        System.out.println("\n Server Linked List:");
+        System.out.println("\n🔗 Server Linked List:");
         while (current != null) {
             System.out.println("→ " + current);
             current = current.next;
+        }
+    }
+    public void addServer(String name, int maxCapacity) {
+        String query = "INSERT INTO servers (name, current_load, max_capacity) VALUES (?, 0, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setString(1, name);
+            pstmt.setInt(2, maxCapacity);
+            pstmt.executeUpdate();
+            System.out.println("Server " + name + " added successfully!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    public void removeServer(int id) {
+        String query = "DELETE FROM servers WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setInt(1, id);
+            int rows = pstmt.executeUpdate();
+            if (rows > 0)
+                System.out.println("Server with ID " + id + " removed successfully!");
+            else
+                System.out.println("No server found with that ID.");
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 }
